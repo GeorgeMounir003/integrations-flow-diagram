@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VGP Site User Flow Diagrams</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    --bg: #0a0f1a;
+    --surface: #131b2e;
+    --surface2: #1a2440;
+    --border: #243050;
+    --text: #e2e8f0;
+    --muted: #8896b3;
+    --accent: #38bdf8;
+    --rest: #0891b2;
+    --rest-border: #22d3ee;
+    --router: #7c3aed;
+    --router-border: #a78bfa;
+    --config: #b45309;
+    --config-border: #fbbf24;
+    --handler: #059669;
+    --handler-border: #34d399;
+    --service: #2563eb;
+    --service-border: #60a5fa;
+    --selector: #be185d;
+    --selector-border: #f472b6;
+    --dto: #7e22ce;
+    --dto-border: #c084fc;
+    --db: #475569;
+    --db-border: #94a3b8;
+    --exc: #dc2626;
+    --exc-border: #f87171;
+    --decision: #d97706;
+    --decision-border: #fbbf24;
+    --glow: rgba(56,189,248,.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  header {
+    text-align: center;
+    padding: 3rem 1rem 1.8rem;
+    background: linear-gradient(180deg, #0e1629 0%, var(--bg) 100%);
+  }
+  header h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: -.3px; }
+  header p { color: var(--muted); margin-top: .5rem; font-size: .9rem; }
+
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: .5rem;
+    padding: 1rem 1rem .6rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    padding: .5rem 1.6rem;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: .85rem;
+    font-weight: 500;
+    font-family: inherit;
+    transition: all .25s;
+  }
+  .tab-btn:hover { border-color: var(--accent); color: var(--text); background: var(--glow); }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #0a0f1a;
+    border-color: var(--accent);
+    font-weight: 600;
+    box-shadow: 0 0 20px rgba(56,189,248,.2);
+  }
+
+  .panel { display: none; padding: 2rem 1.5rem; max-width: 1400px; margin: 0 auto; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,.3);
+  }
+  .card h2 {
+    font-size: 1.2rem;
+    margin-bottom: .5rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+  .badge {
+    font-size: .65rem;
+    padding: .2rem .7rem;
+    border-radius: 99px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .badge-get  { background: #065f46; color: #6ee7b7; }
+  .badge-post { background: #7c2d12; color: #fdba74; }
+  .card .desc { color: var(--muted); font-size: .85rem; margin-bottom: 1.5rem; }
+  .card .desc code {
+    background: var(--surface2);
+    padding: .15rem .5rem;
+    border-radius: 6px;
+    font-size: .8rem;
+    border: 1px solid var(--border);
+  }
+
+  /* ── 3-column flow layout ── */
+  .flow-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    align-items: start;
+  }
+  .flow-left, .flow-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 52px;
+    padding: 2px 0;
+  }
+  .flow-right { justify-content: flex-start; }
+  .flow-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .node {
+    padding: .5rem 1.2rem;
+    border-radius: 10px;
+    font-size: .8rem;
+    font-weight: 500;
+    text-align: center;
+    border: 1.5px solid;
+    line-height: 1.35;
+    max-width: 480px;
+    min-width: 240px;
+    backdrop-filter: blur(4px);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .node:hover { transform: translateY(-1px); }
+  .node .s { font-weight: 400; font-size: .72rem; opacity: .75; display: block; margin-top: 2px; }
+
+  .n-rest    { background: var(--rest);     border-color: var(--rest-border);     color: #fff; box-shadow: 0 2px 12px rgba(8,145,178,.2); }
+  .n-router  { background: var(--router);   border-color: var(--router-border);   color: #fff; box-shadow: 0 2px 12px rgba(124,58,237,.2); }
+  .n-config  { background: var(--config);   border-color: var(--config-border);   color: #fff; box-shadow: 0 2px 12px rgba(180,83,9,.2); }
+  .n-handler { background: var(--handler);  border-color: var(--handler-border);  color: #fff; box-shadow: 0 2px 12px rgba(5,150,105,.2); }
+  .n-service { background: var(--service);  border-color: var(--service-border);  color: #fff; box-shadow: 0 2px 12px rgba(37,99,235,.2); }
+  .n-selector{ background: var(--selector); border-color: var(--selector-border); color: #fff; box-shadow: 0 2px 12px rgba(190,24,93,.2); }
+  .n-dto     { background: var(--dto);      border-color: var(--dto-border);      color: #fff; box-shadow: 0 2px 12px rgba(126,34,206,.2); }
+  .n-db      { background: var(--db);       border-color: var(--db-border);       color: #fff; border-radius: 10px 10px 20px 20px; }
+  .n-exc     { background: rgba(220,38,38,.15); border-color: var(--exc-border); color: #fca5a5; border-style: dashed; }
+
+  .exc-node {
+    padding: .35rem .9rem;
+    border-radius: 8px;
+    font-size: .72rem;
+    font-weight: 500;
+    text-align: center;
+    border: 1.5px dashed var(--exc-border);
+    background: rgba(220,38,38,.1);
+    color: #fca5a5;
+    max-width: 320px;
+  }
+
+  .arrow {
+    width: 2px;
+    height: 20px;
+    background: linear-gradient(180deg, #475569, #64748b);
+    position: relative;
+    margin: 0 auto;
+  }
+  .arrow::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #64748b;
+  }
+
+  .side-line {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .side-line-bar {
+    width: 30px;
+    height: 1.5px;
+    background: #f8717188;
+  }
+  .side-line-bar-right {
+    width: 30px;
+    height: 1.5px;
+    background: #f8717188;
+  }
+
+  .lbl {
+    font-size: .68rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 2px 0;
+    font-weight: 500;
+  }
+
+  /* Branch */
+  .branch-row {
+    display: flex;
+    gap: 2.5rem;
+    justify-content: center;
+    width: 100%;
+  }
+  .branch-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .branch-label {
+    font-size: .72rem;
+    font-weight: 600;
+    padding: .2rem .8rem;
+    border-radius: 99px;
+    margin-bottom: 4px;
+  }
+  .branch-label-yes { background: #065f46; color: #6ee7b7; }
+  .branch-label-no  { background: #7f1d1d; color: #fca5a5; }
+
+  /* Class grid */
+  .class-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: .8rem;
+    margin-top: 1rem;
+  }
+  .class-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    transition: all .2s;
+  }
+  .class-card:hover { border-color: var(--accent); box-shadow: 0 0 16px var(--glow); transform: translateY(-1px); }
+  .class-card h3 { font-size: .9rem; font-weight: 600; color: var(--accent); margin-bottom: .2rem; }
+  .class-card .layer {
+    font-size: .66rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    font-weight: 600;
+    margin-bottom: .4rem;
+  }
+  .class-card ul { list-style: none; font-size: .78rem; color: var(--muted); }
+  .class-card ul li { margin-bottom: .1rem; padding-left: .9rem; position: relative; }
+  .class-card ul li::before { content: "\2192"; color: var(--accent); position: absolute; left: 0; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .8rem;
+    margin-top: 1.2rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--border);
+  }
+  .legend-item { display: flex; align-items: center; gap: .35rem; font-size: .78rem; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+  /* Arch layers */
+  .arch-layers {
+    display: flex;
+    gap: .6rem;
+    overflow-x: auto;
+    padding: 1.5rem 0;
+    align-items: stretch;
+  }
+  .arch-layer {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: .7rem;
+    min-width: 150px;
+    flex-shrink: 0;
+  }
+  .arch-layer h4 {
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+    margin-bottom: .5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: .4rem;
+    font-weight: 600;
+  }
+  .arch-item {
+    padding: .25rem .5rem;
+    border-radius: 6px;
+    font-size: .72rem;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: .3rem;
+    color: #fff;
+  }
+  .arch-arrow { display: flex; align-items: center; color: #475569; font-size: 1.1rem; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>VGP Site User API - Flow Diagrams</h1>
+  <p>Full request lifecycle for GET Site Users and POST Create Site User</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="get">GET Site Users</button>
+  <button class="tab-btn" data-tab="post">POST Create Site User</button>
+  <button class="tab-btn" data-tab="classes">All Classes</button>
+</div>
+
+<!-- ═══════════ GET FLOW ═══════════ -->
+<div id="get" class="panel active">
+  <div class="card">
+    <h2><span class="badge badge-get">GET</span> Get VGP Site Users</h2>
+    <p class="desc"><code>GET /api/v1/vgp/vgp-users?page=1&amp;page_size=20&amp;Email__c=test@mail.com</code></p>
+
+    <div class="flow-grid">
+      <!-- Row 1 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-rest">HTTP GET /api/v1/vgp/vgp-users</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 2 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-rest">Ws_VGP_RestResource.doGet()</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 3 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-router">WebServiceRouter.route()</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 4 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-config">ApiRequest.fromRestContext()<span class="s">parseUrlSegments: resourceType=vgp, subResource=vgp-users</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 5 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-config">QueryOptions.fromRequest()<span class="s">parsePageSize, parsePageNumber, calculateOffset, extractFilters</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 6: HandlerRegistry with exceptions on right -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-router">HandlerRegistry.getHandler("GET", "vgp")<span class="s">Queries API_Handler_Config__mdt, caches via Type.forName()</span></div><div class="arrow"></div></div>
+      <div class="flow-right"><div class="side-line"><div class="side-line-bar-right"></div><div style="display:flex;flex-direction:column;gap:5px"><div class="exc-node">ApiNotFoundException (404) no handler</div><div class="exc-node">ApiBusinessException (422) class not found</div></div></div></div>
+
+      <!-- Row 7 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-handler">Ws_VGP_GetVGPHandler<span class="s">extends BaseRequestHandler</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 8: BaseRequestHandler with exceptions on left -->
+      <div class="flow-left"><div class="side-line" style="flex-direction:row-reverse"><div class="side-line-bar"></div><div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end"><div class="exc-node">ApiValidationException (400)</div><div class="exc-node">ApiNotFoundException (404)</div><div class="exc-node">ApiBusinessException (422)</div><div class="exc-node">Exception &rarr; internalError (500)</div></div></div></div>
+      <div class="flow-center"><div class="node n-handler">BaseRequestHandler.handle(request)<span class="s">preProcess &rarr; execute &rarr; postProcess</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 9: execute with exception on right -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-handler">execute() &mdash; switch on "vgp-users"</div><div class="arrow"></div></div>
+      <div class="flow-right"><div class="side-line"><div class="side-line-bar-right"></div><div class="exc-node">ApiNotFoundException (404) invalid subResource</div></div></div>
+
+      <!-- Row 10 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-service">SiteUserService.service().getVGPUsers(request)</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 11 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-selector">ISiteUsersSelector.newInstance() via Application</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 12: Branch - countAll + selectAll side by side -->
+      <div class="flow-left"></div>
+      <div class="flow-center">
+        <div class="branch-row">
+          <div class="branch-col">
+            <div class="node n-selector">SiteUsersSelector.countAll()<span class="s">SELECT COUNT() FROM Site_User__c</span></div>
+            <div class="arrow"></div>
+            <div class="node n-dto">PaginationMeta.build<span class="s">totalPages, hasNextPage, hasPrevPage</span></div>
+          </div>
+          <div class="branch-col">
+            <div class="node n-selector">SiteUsersSelector.selectAll<span class="s">fflib_QueryFactory: setLimit, setOffset</span></div>
+            <div class="arrow"></div>
+            <div class="node n-dto">SiteUserListDto<span class="s">SiteUserItem[]: sf_id, email, priest_sf_id</span></div>
+          </div>
+        </div>
+        <div class="arrow"></div>
+      </div>
+      <div class="flow-right"></div>
+
+      <!-- Row 13 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-dto">ApiResponseBuilder.okList(dto, pagination, requestId)</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 14 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-dto">ApiResponse<span class="s">success=true, statusCode=200, data + pagination</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 15 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-config">ApiLogger.log(request, response, duration)<span class="s">always runs in finally block</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 16 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-router">WebServiceRouter.writeResponse()<span class="s">RestContext.response, JSON.serialize</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 17 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-rest">HTTP 200 JSON Response</div></div>
+      <div class="flow-right"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Classes Involved</h2>
+    <div class="class-grid">
+      <div class="class-card"><div class="layer">REST Resource</div><h3>Ws_VGP_RestResource</h3><ul><li>@RestResource urlMapping /api/v1/vgp/*</li><li>doGet delegates to WebServiceRouter.route</li></ul></div>
+      <div class="class-card"><div class="layer">Configuration</div><h3>WebServiceRouter</h3><ul><li>route: builds ApiRequest, resolves handler, writes response</li><li>writeResponse: status code, Content-Type, JSON</li><li>Catches ApiNotFoundException, ApiBusinessException, ApiValidationException</li></ul></div>
+      <div class="class-card"><div class="layer">DTO</div><h3>ApiRequest</h3><ul><li>fromRestContext: wraps RestContext into ApiRequest</li><li>parseUrlSegments: apiVersion, resourceType, subResource</li><li>Instantiates QueryOptions.fromRequest</li></ul></div>
+      <div class="class-card"><div class="layer">Configuration</div><h3>QueryOptions</h3><ul><li>fromRequest: fields, orderBy, orderDir, pageSize, pageNumber</li><li>calculateOffset: (pageNumber - 1) x pageSize</li><li>extractFilters: non-reserved params become filters</li></ul></div>
+      <div class="class-card"><div class="layer">Configuration</div><h3>HandlerRegistry</h3><ul><li>Queries API_Handler_Config__mdt</li><li>Type.forName to instantiate handler</li><li>Throws ApiNotFoundException / ApiBusinessException</li></ul></div>
+      <div class="class-card"><div class="layer">Handler</div><h3>Ws_VGP_GetVGPHandler</h3><ul><li>extends BaseRequestHandler</li><li>switch on subResource: vgp-users</li><li>Throws ApiNotFoundException on invalid subResource</li></ul></div>
+      <div class="class-card"><div class="layer">Handler - Abstract</div><h3>BaseRequestHandler</h3><ul><li>Template Method: preProcess, execute, postProcess</li><li>Catches: 400, 404, 422, 500</li></ul></div>
+      <div class="class-card"><div class="layer">Service</div><h3>SiteUserService</h3><ul><li>getVGPUsers: countAll + selectAll</li><li>Builds SiteUserListDto + PaginationMeta</li></ul></div>
+      <div class="class-card"><div class="layer">Selector</div><h3>SiteUsersSelector</h3><ul><li>countAll: SELECT COUNT() FROM Site_User__c</li><li>selectAll(limit, offset): fflib_QueryFactory</li></ul></div>
+      <div class="class-card"><div class="layer">Exception</div><h3>ApiException (abstract)</h3><ul><li>statusCode Integer, errorCode String</li></ul></div>
+      <div class="class-card"><div class="layer">Exception - 404</div><h3>ApiNotFoundException</h3><ul><li>errorCode NOT_FOUND, resourceType, resourceId</li></ul></div>
+      <div class="class-card"><div class="layer">Exception - 422</div><h3>ApiBusinessException</h3><ul><li>errorCode BUSINESS_RULE_VIOLATION, businessRule</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ POST FLOW ═══════════ -->
+<div id="post" class="panel">
+  <div class="card">
+    <h2><span class="badge badge-post">POST</span> Create Site User</h2>
+    <p class="desc"><code>POST /api/v1/vgp/create-siteuser</code> with JSON body: firstName, lastName, email, password, priestId</p>
+
+    <div class="flow-grid">
+      <!-- Row 1 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-rest">HTTP POST /api/v1/vgp/create-siteuser + JSON Body</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 2 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-rest">Ws_VGP_RestResource.doPost()</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 3 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-router">WebServiceRouter.route()</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 4 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-config">ApiRequest.fromRestContext()<span class="s">resourceType=vgp, subResource=create-siteuser</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 5: HandlerRegistry with exceptions on right -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-router">HandlerRegistry.getHandler("POST", "vgp")<span class="s">Queries API_Handler_Config__mdt</span></div><div class="arrow"></div></div>
+      <div class="flow-right"><div class="side-line"><div class="side-line-bar-right"></div><div style="display:flex;flex-direction:column;gap:5px"><div class="exc-node">ApiNotFoundException (404) no handler</div><div class="exc-node">ApiBusinessException (422) class not found</div></div></div></div>
+
+      <!-- Row 6 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-handler">Ws_VGP_PostVGPHandler<span class="s">extends BaseRequestHandler</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 7: BaseRequestHandler with exceptions on left -->
+      <div class="flow-left"><div class="side-line" style="flex-direction:row-reverse"><div class="side-line-bar"></div><div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end"><div class="exc-node">ApiValidationException (400)</div><div class="exc-node">ApiNotFoundException (404)</div><div class="exc-node">ApiBusinessException (422)</div><div class="exc-node">Exception &rarr; internalError (500)</div></div></div></div>
+      <div class="flow-center"><div class="node n-handler">BaseRequestHandler.handle(request)<span class="s">preProcess &rarr; execute &rarr; postProcess</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 8: execute with exception on right -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-handler">execute() &mdash; switch on "create-siteuser"</div><div class="arrow"></div></div>
+      <div class="flow-right"><div class="side-line"><div class="side-line-bar-right"></div><div class="exc-node">ApiNotFoundException (404) invalid subResource</div></div></div>
+
+      <!-- Row 9 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-service">SiteUserService.service().createSiteUser(request)</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 10 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-config">request.getBody() &rarr; RequestBodyParser.parse()<span class="s">reads RestContext body, JSON.deserialize, calls dto.validate()</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 11: validate with exception on left -->
+      <div class="flow-left"><div class="side-line" style="flex-direction:row-reverse"><div class="side-line-bar"></div><div class="exc-node">ApiValidationException (400) blank body, bad JSON, or missing fields</div></div></div>
+      <div class="flow-center"><div class="node n-dto">CreateSiteUserRequestDto.validate()<span class="s">firstName, lastName, email, password required</span></div><div class="arrow"></div><div class="lbl">Validation passed</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 12 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-selector">SiteUsersSelector.selectSiteUsersByEmail(email)<span class="s">duplicate check via fflib_QueryFactory SYSTEM_MODE</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 13 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-db">Site_User__c Database Query</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 14: Branch - duplicate vs no duplicate -->
+      <div class="flow-left"></div>
+      <div class="flow-center">
+        <div class="branch-row">
+          <div class="branch-col">
+            <div class="branch-label branch-label-no">Duplicate exists</div>
+            <div class="arrow"></div>
+            <div class="exc-node" style="font-size:.78rem;padding:.5rem 1rem">ApiBusinessException (422)<br><span style="opacity:.7;font-size:.7rem">DUPLICATE_EMAIL</span></div>
+          </div>
+          <div class="branch-col">
+            <div class="branch-label branch-label-yes">No duplicate</div>
+            <div class="arrow"></div>
+            <div class="node n-service">Generate securityKey<span class="s">Crypto.generateAesKey(256) + hex email</span></div>
+            <div class="arrow"></div>
+            <div class="node n-service">hashPassword()<span class="s">SHA-256(password + securityKey)</span></div>
+            <div class="arrow"></div>
+            <div class="node n-service">Build new Site_User__c<span class="s">First_Name, Last_Name, Email, Priest, Password, SecurityKey</span></div>
+            <div class="arrow"></div>
+            <div class="node n-service">fflib UnitOfWork<span class="s">registerNew(newUser), commitWork()</span></div>
+            <div class="arrow"></div>
+            <div class="node n-db">Site_User__c INSERT</div>
+          </div>
+        </div>
+        <div class="arrow"></div>
+      </div>
+      <div class="flow-right"></div>
+
+      <!-- Row 15 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-dto">CreatedSiteUserDto<span class="s">sf_id, firstName, lastName, email, priest_sf_id</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 16 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-dto">ApiResponseBuilder.ok(dto, requestId)</div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 17 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-dto">ApiResponse<span class="s">success=true, statusCode=200</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 18 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-config">ApiLogger.log(request, response, duration)<span class="s">always runs in finally block</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 19 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-router">WebServiceRouter.writeResponse()<span class="s">RestContext.response, JSON.serialize</span></div><div class="arrow"></div></div>
+      <div class="flow-right"></div>
+
+      <!-- Row 20 -->
+      <div class="flow-left"></div>
+      <div class="flow-center"><div class="node n-rest">HTTP 200 JSON Response</div></div>
+      <div class="flow-right"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Classes Involved</h2>
+    <div class="class-grid">
+      <div class="class-card"><div class="layer">REST Resource</div><h3>Ws_VGP_RestResource</h3><ul><li>doPost delegates to WebServiceRouter.route</li></ul></div>
+      <div class="class-card"><div class="layer">Configuration</div><h3>RequestBodyParser</h3><ul><li>parse: reads body, JSON.deserialize to IRequestDto</li><li>Calls dto.validate() automatically</li><li>Throws ApiValidationException on blank body or bad JSON</li></ul></div>
+      <div class="class-card"><div class="layer">Request DTO</div><h3>CreateSiteUserRequestDto</h3><ul><li>implements IRequestDto</li><li>Fields: firstName, lastName, email, password, priestId</li><li>Throws ApiValidationException on missing fields</li></ul></div>
+      <div class="class-card"><div class="layer">Handler</div><h3>Ws_VGP_PostVGPHandler</h3><ul><li>extends BaseRequestHandler</li><li>switch on subResource: create-siteuser</li><li>Throws ApiNotFoundException on invalid subResource</li></ul></div>
+      <div class="class-card"><div class="layer">Service</div><h3>SiteUserService</h3><ul><li>createSiteUser: duplicate check, gen key, hash pw, insert</li><li>Throws ApiBusinessException DUPLICATE_EMAIL</li><li>Uses fflib UnitOfWork for DML</li></ul></div>
+      <div class="class-card"><div class="layer">Selector</div><h3>SiteUsersSelector</h3><ul><li>selectSiteUsersByEmail: duplicate check query</li><li>fflib_QueryFactory with SYSTEM_MODE FLS</li></ul></div>
+      <div class="class-card"><div class="layer">Response DTO</div><h3>CreatedSiteUserDto</h3><ul><li>implements IResponseDto</li><li>sf_id, firstName, lastName, email, priest_sf_id</li></ul></div>
+      <div class="class-card"><div class="layer">Exception - 400</div><h3>ApiValidationException</h3><ul><li>errorCode VALIDATION_ERROR</li><li>validationErrors: List of String</li><li>Thrown by RequestBodyParser and DTO validate</li></ul></div>
+      <div class="class-card"><div class="layer">Exception - 404</div><h3>ApiNotFoundException</h3><ul><li>errorCode NOT_FOUND</li><li>Thrown by HandlerRegistry + Handlers</li></ul></div>
+      <div class="class-card"><div class="layer">Exception - 422</div><h3>ApiBusinessException</h3><ul><li>errorCode BUSINESS_RULE_VIOLATION</li><li>Thrown by SiteUserService DUPLICATE_EMAIL</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ALL CLASSES ═══════════ -->
+<div id="classes" class="panel">
+  <div class="card">
+    <h2>Architecture Layers</h2>
+    <div class="arch-layers">
+      <div class="arch-layer"><h4>REST</h4><div class="arch-item" style="background:var(--rest)">Ws_VGP_RestResource</div></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-layer"><h4>Infrastructure</h4><div class="arch-item" style="background:var(--router)">WebServiceRouter</div><div class="arch-item" style="background:var(--router)">HandlerRegistry</div><div class="arch-item" style="background:var(--config)">ApiRequest</div><div class="arch-item" style="background:var(--config)">QueryOptions</div><div class="arch-item" style="background:var(--config)">RequestBodyParser</div><div class="arch-item" style="background:var(--config)">ApiLogger</div></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-layer"><h4>Handler</h4><div class="arch-item" style="background:var(--handler)">IRequestHandler</div><div class="arch-item" style="background:var(--handler)">BaseRequestHandler</div><div class="arch-item" style="background:var(--handler)">Ws_VGP_GetVGPHandler</div><div class="arch-item" style="background:var(--handler)">Ws_VGP_PostVGPHandler</div></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-layer"><h4>Service</h4><div class="arch-item" style="background:var(--service)">ISiteUserService</div><div class="arch-item" style="background:var(--service)">SiteUserService</div></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-layer"><h4>Selector</h4><div class="arch-item" style="background:var(--selector)">ISiteUsersSelector</div><div class="arch-item" style="background:var(--selector)">SiteUsersSelector</div></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-layer"><h4>DTOs</h4><div class="arch-item" style="background:var(--dto)">ApiResponse / ApiError</div><div class="arch-item" style="background:var(--dto)">IResponseDto / IRequestDto</div><div class="arch-item" style="background:var(--dto)">SiteUserListDto</div><div class="arch-item" style="background:var(--dto)">CreatedSiteUserDto</div><div class="arch-item" style="background:var(--dto)">CreateSiteUserRequestDto</div><div class="arch-item" style="background:var(--dto)">PaginationMeta</div><div class="arch-item" style="background:var(--dto)">ApiResponseBuilder</div></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-layer"><h4>Exceptions</h4><div class="arch-item" style="background:var(--exc)">ApiException (abstract)</div><div class="arch-item" style="background:var(--exc)">ApiValidationException 400</div><div class="arch-item" style="background:var(--exc)">ApiNotFoundException 404</div><div class="arch-item" style="background:var(--exc)">ApiBusinessException 422</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Complete Class Reference</h2>
+    <div class="class-grid">
+      <div class="class-card"><div class="layer">REST Resource</div><h3>Ws_VGP_RestResource</h3><ul><li>@RestResource urlMapping /api/v1/vgp/*</li><li>doGet, doPost, doPatch, doDelete</li><li>All methods delegate to WebServiceRouter.route</li></ul></div>
+      <div class="class-card"><div class="layer">Configuration</div><h3>WebServiceRouter</h3><ul><li>route: orchestrates full request lifecycle</li><li>writeResponse: serialises ApiResponse to RestContext</li><li>Catches ApiNotFoundException, ApiBusinessException, ApiValidationException</li></ul></div>
+      <div class="class-card"><div class="layer">Configuration</div><h3>HandlerRegistry</h3><ul><li>getHandler(httpMethod, resourceType)</li><li>Queries API_Handler_Config__mdt custom metadata</li><li>Type.forName dynamic instantiation + cache</li><li>Throws ApiNotFoundException / ApiBusinessException</li></ul></div>
+      <div class="class-card"><div class="layer">DTO</div><h3>ApiRequest</h3><ul><li>fromRestContext: factory method</li><li>parseUrlSegments: version, resource, subResource</li><li>getBody(Type): delegates to RequestBodyParser</li><li>generateRequestId: 32-char hex</li></ul></div>
+      <div class="class-card"><div class="layer">Configuration</div><h3>QueryOptions</h3><ul><li>fields, filters, orderBy, orderDir, pageSize, pageNumber, offset</li><li>extractFilters: non-reserved params become filters</li><li>Throws ApiValidationException for invalid page_size</li></ul></div>
+      <div class="class-card"><div class="layer">Configuration</div><h3>RequestBodyParser</h3><ul><li>parse(Type): reads RestContext body</li><li>JSON.deserialize to IRequestDto, auto-calls validate</li><li>Throws ApiValidationException on empty or invalid body</li></ul></div>
+      <div class="class-card"><div class="layer">Interface</div><h3>IRequestHandler</h3><ul><li>handle(ApiRequest) returns ApiResponse</li></ul></div>
+      <div class="class-card"><div class="layer">Handler - Abstract</div><h3>BaseRequestHandler</h3><ul><li>Template Method: preProcess, execute, postProcess</li><li>Catches: ApiValidationException 400, ApiNotFoundException 404, ApiBusinessException 422, Exception 500</li><li>ApiLogger in finally block</li></ul></div>
+      <div class="class-card"><div class="layer">Handler</div><h3>Ws_VGP_GetVGPHandler</h3><ul><li>vgp-users &rarr; SiteUserService.getVGPUsers</li><li>get-cda &rarr; not implemented</li><li>Throws ApiNotFoundException on unknown subResource</li></ul></div>
+      <div class="class-card"><div class="layer">Handler</div><h3>Ws_VGP_PostVGPHandler</h3><ul><li>create-siteuser &rarr; SiteUserService.createSiteUser</li><li>Throws ApiNotFoundException on unknown subResource</li></ul></div>
+      <div class="class-card"><div class="layer">Interface</div><h3>ISiteUserService</h3><ul><li>getVGPUsers(ApiRequest): ApiResponse</li><li>createSiteUser(ApiRequest): ApiResponse</li></ul></div>
+      <div class="class-card"><div class="layer">Service</div><h3>SiteUserService</h3><ul><li>getVGPUsers: countAll + selectAll, paginated list</li><li>getActiveUser: countAllActiveUsers + selectActiveUser</li><li>createSiteUser: validate, dup check, gen key, hash pw, insert</li><li>Throws ApiBusinessException DUPLICATE_EMAIL</li></ul></div>
+      <div class="class-card"><div class="layer">Interface</div><h3>ISiteUsersSelector</h3><ul><li>selectSiteUsersByEmail, selectAll, selectActiveUser</li><li>countAll, countAllActiveUsers</li></ul></div>
+      <div class="class-card"><div class="layer">Selector</div><h3>SiteUsersSelector</h3><ul><li>extends fflib_SObjectSelector</li><li>Site_User__c: Id, Email__c, Priest__c</li><li>fflib_QueryFactory for dynamic SOQL</li></ul></div>
+      <div class="class-card"><div class="layer">DTO</div><h3>ApiResponse</h3><ul><li>success, statusCode, requestId</li><li>data (IResponseDto), errors (ApiError list), pagination</li></ul></div>
+      <div class="class-card"><div class="layer">DTO</div><h3>ApiError</h3><ul><li>code, message, field</li></ul></div>
+      <div class="class-card"><div class="layer">Interface</div><h3>IResponseDto / IRequestDto</h3><ul><li>IResponseDto: marker interface</li><li>IRequestDto: validate() method</li></ul></div>
+      <div class="class-card"><div class="layer">Configuration</div><h3>ApiResponseBuilder</h3><ul><li>ok: 200 single, okList: 200 paginated</li><li>error, notFound 404, forbidden 403, internalError 500</li></ul></div>
+      <div class="class-card"><div class="layer">Configuration</div><h3>PaginationMeta</h3><ul><li>build(totalRecords, opts)</li><li>totalRecords, pageSize, pageNumber, totalPages, hasNext, hasPrev</li></ul></div>
+      <div class="class-card"><div class="layer">Response DTO</div><h3>SiteUserListDto</h3><ul><li>implements IResponseDto</li><li>SiteUserItem[]: sf_id, email, priest_sf_id</li></ul></div>
+      <div class="class-card"><div class="layer">Response DTO</div><h3>CreatedSiteUserDto</h3><ul><li>implements IResponseDto</li><li>sf_id, firstName, lastName, email, priest_sf_id</li></ul></div>
+      <div class="class-card"><div class="layer">Request DTO</div><h3>CreateSiteUserRequestDto</h3><ul><li>implements IRequestDto</li><li>firstName, lastName, email, password, priestId</li><li>Throws ApiValidationException on missing fields</li></ul></div>
+      <div class="class-card"><div class="layer">Exception - Abstract</div><h3>ApiException</h3><ul><li>extends Exception</li><li>statusCode Integer, errorCode String</li></ul></div>
+      <div class="class-card"><div class="layer">Exception - 400</div><h3>ApiValidationException</h3><ul><li>errorCode VALIDATION_ERROR</li><li>validationErrors: List of String</li><li>Thrown by: RequestBodyParser, DTO validate, QueryOptions</li></ul></div>
+      <div class="class-card"><div class="layer">Exception - 404</div><h3>ApiNotFoundException</h3><ul><li>errorCode NOT_FOUND</li><li>resourceType, resourceId</li><li>Thrown by: HandlerRegistry, GetHandler, PostHandler</li></ul></div>
+      <div class="class-card"><div class="layer">Exception - 422</div><h3>ApiBusinessException</h3><ul><li>errorCode BUSINESS_RULE_VIOLATION</li><li>businessRule String</li><li>Thrown by: HandlerRegistry, SiteUserService DUPLICATE_EMAIL</li></ul></div>
+      <div class="class-card"><div class="layer">Configuration</div><h3>ApiLogger</h3><ul><li>log(req, res, duration)</li><li>logUnexpected(exception, req)</li><li>Delegates to IApiLoggerService</li></ul></div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rest)"></div>REST</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--router)"></div>Router</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--config)"></div>Config</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--handler)"></div>Handler</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--service)"></div>Service</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--selector)"></div>Selector</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--dto)"></div>DTO</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--exc)"></div>Exception</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--db)"></div>Database</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
